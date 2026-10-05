@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kor Atölye — El Yapımı Metal Objeler</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,500;12..96,700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#e3e4e2;--ink:#16181a;--mute:#666a6d;--cu:#c2603a;--line:#16181a22;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px);scroll-behavior:smooth}
+*,*::before,*::after{box-sizing:inherit;margin:0}
+body{background:var(--bg);color:var(--ink);font:400 1rem/1.6 'Bricolage Grotesque',system-ui,sans-serif;overflow-x:hidden}
+canvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;display:block;pointer-events:none}
+:focus-visible{outline:2px solid var(--cu);outline-offset:4px}
+nav{position:fixed;top:env(safe-area-inset-top,0px);left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:1.3rem clamp(1.2rem,4vw,3rem);z-index:20}
+nav b{font-weight:700;letter-spacing:-.03em;font-size:1.3rem}
+nav a{font-size:.85rem;font-weight:500;text-decoration:none;border:1px solid var(--ink);border-radius:99px;padding:.55rem 1.2rem;transition:.3s;background:var(--bg)}
+nav a:hover{background:var(--ink);color:var(--bg)}
+.pbar{position:fixed;left:0;top:0;height:3px;width:100%;background:var(--cu);transform-origin:0 0;transform:scaleX(0);z-index:30}
+section,.mq{position:relative;z-index:5}
+.pad{padding:clamp(5rem,10vw,9rem) clamp(1.2rem,6vw,6rem)}
+h1,h2,h3{font-weight:700;letter-spacing:-.045em;line-height:.95}
+h1{font-size:clamp(3.4rem,11vw,10rem);max-width:9ch}
+h2{font-size:clamp(2.4rem,6vw,5.4rem)}
+h3{font-size:1.4rem;letter-spacing:-.03em}
+p{color:var(--mute)}
+.hero{min-height:100svh;display:flex;align-items:flex-end;padding:6rem clamp(1.2rem,6vw,6rem) 7rem}
+.hero p{max-width:28rem;margin-top:1.5rem;font-size:1.05rem}
+.hint{position:absolute;right:clamp(1.2rem,6vw,6rem);bottom:6.5rem;font-size:.8rem;color:var(--mute);writing-mode:vertical-rl}
+.about,.order,.faq{display:grid;grid-template-columns:1fr 1fr;gap:clamp(2rem,6vw,6rem)}
+.about{background:var(--bg)}
+.about h2{max-width:11ch}
+.about .col p{font-size:1.1rem;margin-bottom:1.2rem}
+.vals{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-top:2.5rem;border-top:1px solid var(--line);padding-top:1.5rem}
+.vals h3{font-size:1.1rem}.vals p{font-size:.9rem;margin-top:.4rem}
+.mq{background:var(--ink);color:var(--bg);overflow:hidden;padding:1.6rem 0;white-space:nowrap}
+.mq div{display:inline-block;font-size:clamp(2.2rem,6vw,5rem);font-weight:700;letter-spacing:-.04em;will-change:transform}
+.mq i{font-style:normal;color:var(--cu);margin:0 1.5rem}
+/* showcase */
+.mat{min-height:110svh;display:flex;align-items:center}
+.mat.r{justify-content:flex-end}
+.mat .txt{max-width:29rem}
+.mat .nm{font-size:.85rem;font-weight:500;color:var(--cu);margin-bottom:1rem}
+.mat ul{list-style:none;margin-top:1.8rem;border-top:1px solid var(--line)}
+.mat li{display:flex;justify-content:space-between;gap:1rem;padding:.7rem 0;border-bottom:1px solid var(--line);font-size:.92rem}
+.mat li span{color:var(--mute);text-align:right}
+.mat p{margin-top:1.4rem;font-size:1.05rem}
+.mat a{display:inline-block;margin-top:1.6rem;color:var(--ink);font-weight:500;border-bottom:1px solid var(--ink);text-decoration:none}
+.mat a:hover{color:var(--cu);border-color:var(--cu)}
+.hud{position:fixed;left:clamp(1.2rem,4vw,3rem);bottom:calc(1.5rem + env(safe-area-inset-bottom,0px));z-index:10;display:flex;align-items:center;gap:.8rem;font-size:.8rem;font-weight:500;opacity:0;transition:.4s}
+.hud.on{opacity:1}
+.dot{width:1.1rem;height:1.1rem;border-radius:50%;background:var(--sw,#999);box-shadow:inset -3px -3px 6px #0005,inset 2px 2px 4px #fff8;transition:background .6s}
+.nums{display:grid;grid-template-columns:repeat(4,1fr);gap:2rem;border-top:1px solid var(--line)}
+.nums b{display:block;font-size:clamp(2.6rem,6vw,5rem);letter-spacing:-.05em;font-weight:500;line-height:1}
+.nums span{color:var(--mute);font-size:.9rem}
+.proc{background:#d9dad8}
+.proc h2{margin-bottom:3rem;max-width:12ch}
+.pg{display:grid;grid-template-columns:repeat(4,1fr);gap:1.5rem}
+.pg div{border-top:1px solid var(--ink);padding-top:1rem}
+.pg p{margin-top:.5rem;font-size:.95rem}
+.order{background:var(--bg)}
+.ol{list-style:none;counter-reset:s}
+.ol li{counter-increment:s;padding:1.4rem 0 1.4rem 3.2rem;border-top:1px solid var(--line);position:relative}
+.ol li::before{content:counter(s);position:absolute;left:0;top:1.3rem;width:2rem;height:2rem;border-radius:50%;border:1px solid var(--ink);display:grid;place-items:center;font-size:.85rem;font-weight:500}
+.ol p{margin-top:.3rem}
+.faq{grid-template-columns:1fr 1.4fr;background:#d9dad8}
+details{border-top:1px solid var(--line);padding:1.2rem 0}
+details:last-child{border-bottom:1px solid var(--line)}
+summary{cursor:pointer;font-weight:500;font-size:1.15rem;list-style:none;display:flex;justify-content:space-between}
+summary::after{content:"+";transition:transform .3s}
+details[open] summary::after{transform:rotate(45deg)}
+details p{margin-top:.8rem;max-width:40rem}
+.cta{text-align:center;min-height:90svh;display:flex;flex-direction:column;justify-content:center;align-items:center;background:var(--ink);color:var(--bg)}
+.cta h2{max-width:11ch}
+.cta p{color:#a5a9ab;margin:1.5rem auto 2.5rem;max-width:34rem}
+.btn{display:inline-flex;gap:.8rem;background:var(--bg);color:var(--ink);padding:1.2rem 2.4rem;border-radius:99px;text-decoration:none;font-weight:500;transition:.3s}
+.btn:hover{background:var(--cu);color:#fff;transform:scale(1.04)}
+.foot{margin-top:4rem;color:#7d8184;font-size:.82rem}
+.rv{opacity:0;transform:translateY(30px);filter:blur(6px);transition:1s cubic-bezier(.2,.7,.2,1)}
+.rv.on{opacity:1;transform:none;filter:none}
+@media(max-width:820px){.about,.order,.faq{grid-template-columns:1fr}.vals{grid-template-columns:1fr}.nums,.pg{grid-template-columns:1fr 1fr}.hint{display:none}.mat{align-items:flex-end;padding-bottom:4rem}.mat.r{justify-content:flex-start}.mat .txt{background:#e3e4e2e6;padding:1rem;margin:0 -1rem;border-radius:14px}}
+@media(prefers-reduced-motion:reduce){.rv{opacity:1;transform:none;filter:none;transition:none}}
+</style>
+</head>
+<body>
+<div class="pbar" id="pbar"></div>
+<canvas id="gl" aria-hidden="true"></canvas>
+<nav><b>kor.</b><a href="#shop">Koleksiyon</a></nav>
+<div class="hud" id="hud"><span class="dot" id="dot"></span><span id="matn">01 · Ham malzeme</span></div>
+
+<section class="hero" id="hero">
+  <div class="rv"><h1>Metalin en sessiz hali.</h1><p>El dövmesi vazolar, şamdanlar ve kaselerle mekânınıza karakter katan metal objeler. Her biri tek, numaralı, yaşam boyu sizin.</p></div>
+  <span class="hint">kaydırın</span>
+</section>
+
+<section class="about pad">
+  <h2 class="rv">Seri üretim yok. Sadece usta, ateş ve zaman.</h2>
+  <div class="col rv">
+    <p>Kor Atölye'de her obje, bir metal levhanın ısıtılması ve elle şekillendirilmesiyle başlar. Makine yerine çekiç, kalıp yerine göz ve el kullanırız.</p>
+    <p>Vazolar, şamdanlar ve kaseler; villa, ofis ve koleksiyon mekânları için tasarlanır. Her parça imzalıdır, numaralıdır ve sertifikayla gelir.</p>
+    <div class="vals"><div><h3>El işçiliği</h3><p>Her adım elde yapılır, kısayol yoktur.</p></div><div><h3>Tek parça</h3><p>Aynı obje ikinci kez üretilmez.</p></div><div><h3>Ömür boyu</h3><p>Yüzey bakımı ve onarımı atölyemizden.</p></div></div>
+  </div>
+</section>
+
+<div class="mq"><div id="mq">Dövme<i>/</i>Bükme<i>/</i>Kaynak<i>/</i>Patina<i>/</i>Cila<i>/</i>Dövme<i>/</i>Bükme<i>/</i>Kaynak<i>/</i>Patina<i>/</i>Cila<i>/</i></div></div>
+
+<div id="mats">
+  <section class="mat pad r" data-m="Amfora Vazo|#d2a94f"><div class="txt rv"><div class="nm">Pirinç · El dövmesi</div><h2>Amfora<br>Vazo</h2><p>Tek parça levhadan dövülerek şekillendirilir. Yüzeydeki her çekiç izi elle atılmıştır; ışık altında yüzlerce küçük yansımaya bölünür.</p><ul><li>Yükseklik<span>38 cm</span></li><li>Malzeme<span>Pirinç, mum kaplı</span></li><li>Üretim süresi<span>Yaklaşık 36 saat</span></li></ul><a href="https://www.shopier.com/" target="_blank" rel="noopener">Shopier'da gör ↗</a></div></section>
+  <section class="mat pad" data-m="Kule Şamdan|#aeb4b8"><div class="txt rv"><div class="nm">Çelik · Fırçalı yüzey</div><h2>Kule<br>Şamdan</h2><p>Torna ve el cilasıyla hazırlanan çelik gövde, boğumlu formuyla yemek masasında heykel gibi durur. Tek mum veya uzun konik mumla kullanılır.</p><ul><li>Yükseklik<span>32 cm</span></li><li>Malzeme<span>Paslanmaz çelik</span></li><li>Bakım<span>Yumuşak bez yeterli</span></li></ul><a href="https://www.shopier.com/" target="_blank" rel="noopener">Shopier'da gör ↗</a></div></section>
+  <section class="mat pad r" data-m="Ateş Kase|#c2603a"><div class="txt rv"><div class="nm">Bakır · Dövme ve patina</div><h2>Ateş<br>Kase</h2><p>Bakır levha çekiçle derinleştirilir, ısıl işlemle tonlanır. Meyve, anahtar ya da yalnızca boş bir sehpa üzerinde bile bir odanın odağı olur.</p><ul><li>Çap<span>34 cm</span></li><li>Malzeme<span>Bakır, patinalı</span></li><li>Üretim süresi<span>Yaklaşık 28 saat</span></li></ul><a href="https://www.shopier.com/" target="_blank" rel="noopener">Shopier'da gör ↗</a></div></section>
+  <section class="mat pad" data-m="Gece Vazo|#4a4f54"><div class="txt rv"><div class="nm">Antrasit çelik · Patinalı</div><h2>Gece<br>Vazo</h2><p>Koyu patinalı yüzeyi ışığı yutar, kenar çizgileri ise parlar. Taze çiçek ya da kuru dal ile minimal mekânlar için uygundur.</p><ul><li>Yükseklik<span>42 cm</span></li><li>Malzeme<span>Karbon çelik, mat patina</span></li><li>Bakım<span>Kuru bez, nemden uzak</span></li></ul><a href="https://www.shopier.com/" target="_blank" rel="noopener">Shopier'da gör ↗</a></div></section>
+</div>
+
+<section class="proc pad">
+  <h2 class="rv">Bir objenin yolculuğu</h2>
+  <div class="pg rv">
+    <div><h3>Ateş</h3><p>Metal kor halinde kızdırılır; yumuşadığı an şekil almaya hazırdır.</p></div>
+    <div><h3>Dövme</h3><p>Yüzlerce çekiç vuruşu kalınlığı, dokuyu ve karakteri belirler.</p></div>
+    <div><h3>Bükme ve kaynak</h3><p>Parçalar birleştirilir, forma son hali verilir.</p></div>
+    <div><h3>Patina ve cila</h3><p>Yüzey renklendirilir, elle parlatılır ve mumla korunur.</p></div>
+  </div>
+</section>
+
+<section class="pad">
+  <div class="nums">
+    <div class="rv"><b data-n="12">0</b><span>yıllık usta deneyimi</span></div>
+    <div class="rv"><b data-n="480">0</b><span>teslim edilen obje</span></div>
+    <div class="rv"><b data-n="40">0</b><span>ortalama saat el emeği</span></div>
+    <div class="rv"><b data-n="1">0</b><span>her obje tek ve numaralı</span></div>
+  </div>
+</section>
+
+<section class="order pad">
+  <h2 class="rv">Size özel bir parça mı istiyorsunuz?</h2>
+  <ol class="ol rv">
+    <li><h3>Görüşme</h3><p>Mekânınızı, ölçüyü ve beklentinizi dinleriz.</p></li>
+    <li><h3>Eskiz ve onay</h3><p>Çizim ve malzeme önerisini onayınıza sunarız.</p></li>
+    <li><h3>Üretim</h3><p>Atölyede ortalama 3 – 6 hafta içinde el yapımı olarak hazırlanır.</p></li>
+    <li><h3>Sigortalı teslimat</h3><p>Özel ambalajla, sertifikasıyla birlikte adresinize ulaşır.</p></li>
+  </ol>
+</section>
+
+<section class="faq pad">
+  <h2 class="rv">Sık sorulanlar</h2>
+  <div class="rv">
+    <details><summary>Objeler nasıl satın alınıyor?</summary><p>Hazır parçalar Shopier mağazamızdan satın alınır. Özel siparişler için önce bizimle iletişime geçersiniz.</p></details>
+    <details><summary>Teslimat ve sigorta nasıl işliyor?</summary><p>Tüm gönderiler sigortalı ve özel ambalajlı yapılır.</p></details>
+    <details><summary>Bakımı nasıl yapılır?</summary><p>İç mekânda yumuşak, kuru bir bezle silmek yeterlidir. Pirinç ve bakır için yıllık cila önerilir.</p></details>
+    <details><summary>Özel ölçü ve tasarım mümkün mü?</summary><p>Evet. Mekâna özel ölçü, malzeme ve yüzey seçenekleriyle tek seferlik üretim yapılır.</p></details>
+  </div>
+</section>
+
+<section class="cta pad" id="shop">
+  <h2 class="rv">Sizin için hangisi?</h2>
+  <p class="rv">Güncel objeler Shopier mağazamızda. Güvenli ödeme, sigortalı teslimat.</p>
+  <a class="btn rv" href="https://www.shopier.com/" target="_blank" rel="noopener">Shopier'da incele <span>↗</span></a>
+  <div class="foot rv">@koratolye · atolye@koratolye.com · İstanbul · © 2026 Kor Atölye</div>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+  function cl(v){return Math.max(0,Math.min(1,v))}
+  function sm(x){return x*x*(3-2*x)}
+  function wn(s,d,w){return sm(cl((s-d*(1-w))/w))}
+  var $=function(s){return document.querySelector(s)};
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){if(!e.isIntersecting)return;e.target.classList.add('on');var b=e.target.querySelector('[data-n]');if(b){var n=+b.dataset.n,s=performance.now();(function f(t){var k=cl((t-s)/1400);b.textContent=Math.round(n*(1-Math.pow(1-k,3)));if(k<1)requestAnimationFrame(f)})(s)}io.unobserve(e.target)})},{threshold:.25});
+  document.querySelectorAll('.rv').forEach(function(el){io.observe(el)});
+  var dot=$('#dot'),matn=$('#matn'),hud=$('#hud');
+  var STG=[['01 · Ham malzeme','#8a5a3a'],['02 · Ayıklama','#8a5a3a'],['03 · Bükme','#a9582e'],['04 · Montaj','#9a9fa3'],['05 · Kaynak','#ff7a2a'],['06 · Cila ve patina','#c8ccd0'],['07 · Tamamlandı','#aeb4b8']],lastS=-1;
+
+  var cv=$('#gl'),r;
+  try{r=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true})}catch(e){r=null}
+  var V3=THREE.Vector3,Q=THREE.Quaternion,FL=-2,S=11;
+  function R(){S=S*16807%2147483647;return S/2147483647}
+  function qe(x,y,z){return new Q().setFromEuler(new THREE.Euler(x,y,z))}
+  var sc,cam,rig,world,parts=[],beads=[],mats=[],U={fin:{value:0}},mx=0,my=0,op=1,wl,spG,sd=[],NP=132,spP,spA;
+  if(r){
+    r.setPixelRatio(Math.min(devicePixelRatio,2));r.toneMapping=THREE.ACESFilmicToneMapping;r.toneMappingExposure=1.1;r.outputEncoding=THREE.sRGBEncoding;
+    r.shadowMap.enabled=true;r.shadowMap.type=THREE.PCFSoftShadowMap;
+    sc=new THREE.Scene();cam=new THREE.PerspectiveCamera(32,1,.1,60);cam.position.set(0,4.4,9.6);cam.lookAt(0,-.5,0);
+    // studio environment
+    var c=document.createElement('canvas');c.width=1024;c.height=512;var x=c.getContext('2d');
+    var g=x.createLinearGradient(0,0,0,512);g.addColorStop(0,'#f4f4f2');g.addColorStop(.5,'#a9adb0');g.addColorStop(1,'#2a2c2e');x.fillStyle=g;x.fillRect(0,0,1024,512);
+    [[100,60,160,200,1],[420,30,220,90,1],[760,80,120,260,.95],[300,330,400,26,.7],[0,400,1024,12,.25]].forEach(function(b){x.fillStyle='rgba(255,255,255,'+b[4]+')';x.fillRect(b[0],b[1],b[2],b[3])});
+    var tex=new THREE.CanvasTexture(c);tex.mapping=THREE.EquirectangularReflectionMapping;
+    sc.environment=new THREE.PMREMGenerator(r).fromEquirectangular(tex).texture;
+    var key=new THREE.DirectionalLight(0xfff4e6,1.4);key.position.set(3,7,5);key.castShadow=true;key.shadow.mapSize.set(1024,1024);
+    var sh=key.shadow.camera;sh.left=sh.bottom=-6;sh.right=sh.top=6;sh.far=25;key.shadow.bias=-.0006;sc.add(key);
+    sc.add(new THREE.HemisphereLight(0xffffff,0x888a8c,.45));
+    wl=new THREE.PointLight(0xff7a2a,0,3.2);
+    rig=new THREE.Group();world=new THREE.Group();rig.add(world);world.add(wl);sc.add(rig);
+    var gr=new THREE.Mesh(new THREE.PlaneGeometry(18,11),new THREE.ShadowMaterial({opacity:.24}));gr.rotation.x=-Math.PI/2;gr.position.y=FL-.002;gr.receiveShadow=true;rig.add(gr);
+
+    // worn, rusty, scratched surface (swapped to brushed/patina tint by the finishing stage)
+    var rk=document.createElement('canvas');rk.width=rk.height=256;var rq=rk.getContext('2d');rq.fillStyle='#5a4535';rq.fillRect(0,0,256,256);
+    var cs=['#8a4a28','#a9582e','#3b2c25','#6f6a64','#4b3a2e','#c27a45'],i;
+    for(i=0;i<1400;i++){rq.globalAlpha=.15+R()*.35;rq.fillStyle=cs[i%6];rq.fillRect(R()*256,R()*256,2+R()*(i%7?10:36),1+R()*5)}
+    rq.globalAlpha=.25;rq.strokeStyle='#cfc9c2';for(i=0;i<60;i++){rq.beginPath();var sx=R()*256,sy=R()*256;rq.moveTo(sx,sy);rq.lineTo(sx+R()*60-30,sy+R()*8-4);rq.stroke()}
+    var rust=new THREE.CanvasTexture(rk);rust.wrapS=rust.wrapT=THREE.RepeatWrapping;rust.encoding=THREE.sRGBEncoding;
+    function mat(tint){var m=new THREE.MeshStandardMaterial({map:rust,bumpMap:rust,bumpScale:1.4,metalness:.9,roughness:.82,envMapIntensity:1.2,side:THREE.DoubleSide});
+      m.onBeforeCompile=function(s){s.uniforms.uFin=U.fin;s.uniforms.uTint={value:new THREE.Color(tint)};
+        s.fragmentShader='uniform float uFin;uniform vec3 uTint;\n'+s.fragmentShader.replace('#include <map_fragment>','vec4 tc=texture2D(map,vUv);tc=mapTexelToLinear(tc);float l=dot(tc.rgb,vec3(.33));diffuseColor.rgb*=mix(tc.rgb,uTint*(.55+l*1.6),uFin);')};
+      mats.push(m);return m}
+    var mSt=mat('#9a9fa3'),mDk=mat('#4c5054'),mBr=mat('#b88a47');
+
+    function reg(o,m,cfg){cfg.obj=o;o.traverse(function(n){if(n.isMesh){n.castShadow=n.receiveShadow=true;n.material=n.material.isMeshStandardMaterial&&n.material!==m?n.material:m}});world.add(o);
+      cfg.mz=cfg.mz||0;cfg.lb=0;cfg.fq=cfg.fq||new Q();cfg.lay=cfg.lay||new Q();cfg.upd=cfg.upd||null;parts.push(cfg)}
+    // deformable flat sheet: bends from raw scrap plate into its shaped form
+    function plate(W,H,T,sx,sy,fn,m,fq,fp,ord,rad){
+      var g=new THREE.BoxGeometry(W,H,T,sx,sy,1),ps=g.attributes.position,n=ps.count,A=new Float32Array(n*3),B=new Float32Array(n*3),mz=0;
+      for(var i=0;i<n;i++){var x=ps.getX(i),y=ps.getY(i),z=ps.getZ(i);
+        if(Math.abs(x)>W/2-1e-4||Math.abs(y)>H/2-1e-4){x+=Math.sin(y*41+x*13)*.05;y+=Math.sin(x*37-y*9)*.05}
+        A[i*3]=x;A[i*3+1]=y;A[i*3+2]=z;var b=fn(x,y,z);B.set(b,i*3);mz=Math.min(mz,b[2])}
+      var me=new THREE.Mesh(g,m);me.frustumCulled=false;
+      function upd(k){var a=ps.array;for(var i=0;i<n*3;i++)a[i]=A[i]+(B[i]-A[i])*k;ps.needsUpdate=true;g.computeVertexNormals()}
+      upd(0);reg(me,m,{ord:ord,rad:rad,rest:FL+T/2+.01,lay:qe(-Math.PI/2,0,0),fp:fp,fq:fq,upd:upd,mz:mz})}
+    // deformable rod: a straight welding rod / steel bar that is bent along a path
+    function rod(pts,rad,N,M,m,ord,rr){
+      var cur=new THREE.CatmullRomCurve3(pts),L=cur.getLength(),Bp=cur.getSpacedPoints(N),cc=new THREE.Box3().setFromPoints(Bp).getCenter(new V3());
+      Bp.forEach(function(p){p.sub(cc)});var Ap=Bp.map(function(p,i){return new V3((i/N-.5)*L,0,0)});
+      var nv=(N+1)*M+2,pos=new Float32Array(nv*3),uv=new Float32Array(nv*2),ix=[],i,j;
+      for(i=0;i<=N;i++)for(j=0;j<M;j++){uv[(i*M+j)*2]=i/N;uv[(i*M+j)*2+1]=j/M}
+      for(i=0;i<N;i++)for(j=0;j<M;j++){var a=i*M+j,b=i*M+(j+1)%M;ix.push(a,a+M,b,b,a+M,b+M)}
+      var s0=(N+1)*M;for(j=0;j<M;j++){ix.push(s0,j,(j+1)%M,s0+1,N*M+(j+1)%M,N*M+j)}
+      var g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setAttribute('uv',new THREE.BufferAttribute(uv,2));g.setIndex(ix);
+      var me=new THREE.Mesh(g,m);me.frustumCulled=false;
+      function upd(k){var C=[],i,j,nr=new V3(0,0,1),T=new V3(),bn=new V3();for(i=0;i<=N;i++)C.push(new V3().lerpVectors(Ap[i],Bp[i],k));
+        for(i=0;i<=N;i++){T.subVectors(C[Math.min(N,i+1)],C[Math.max(0,i-1)]).normalize();nr.addScaledVector(T,-nr.dot(T)).normalize();bn.crossVectors(T,nr);
+          for(j=0;j<M;j++){var an=j/M*6.2832,co=Math.cos(an)*rad,si=Math.sin(an)*rad,o=(i*M+j)*3;
+            pos[o]=C[i].x+nr.x*co+bn.x*si;pos[o+1]=C[i].y+nr.y*co+bn.y*si;pos[o+2]=C[i].z+nr.z*co+bn.z*si}}
+        pos.set([C[0].x,C[0].y,C[0].z,C[N].x,C[N].y,C[N].z],s0*3);g.attributes.position.needsUpdate=true;g.computeVertexNormals()}
+      upd(0);reg(me,m,{ord:ord,rad:rr,rest:FL+rad+.01,lay:qe(-Math.PI/2,0,0),fp:cc,upd:upd})}
+    function rigid(geo,m,cfg){var me=new THREE.Mesh(geo,m);reg(me,m,cfg)}
+    function V(a,b,c2){return new V3(a,b,c2)}
+    function bolt(m){var gp=new THREE.Group(),h=new THREE.Mesh(new THREE.CylinderGeometry(.085,.085,.07,6),m),s=new THREE.Mesh(new THREE.CylinderGeometry(.04,.04,.18,10),m);s.position.y=-.12;gp.add(h,s);return gp}
+    function gear(rd,n,d,hole){var s=new THREE.Shape(),N=n*4,i;for(i=0;i<N;i++){var a=i/N*6.2832,q=(i%4<2)?rd:rd*.8;i?s.lineTo(Math.cos(a)*q,Math.sin(a)*q):s.moveTo(q,0)}
+      var p=new THREE.Path();p.absarc(0,0,hole,0,6.2832,true);s.holes.push(p);var g=new THREE.ExtrudeGeometry(s,{depth:d,bevelEnabled:false});g.translate(0,0,-d/2);return g}
+    var LAYY=qe(0,0,Math.PI/2),LAYX=qe(-Math.PI/2,0,0);
+
+    // ---- THE sculpture: a hand-built scrap-metal heron ----
+    rigid(new THREE.BoxGeometry(2.4,.16,1.1),mSt,{ord:0,rad:1,rest:FL+.08,fp:V(0,-1.92,0)});
+    rigid(new THREE.CylinderGeometry(.075,.075,.28,18,1,true),mSt,{ord:.08,rad:.15,rest:FL+.075,lay:LAYY,fp:V(-.3,-1.7,.12)});
+    rigid(new THREE.CylinderGeometry(.075,.075,.28,18,1,true),mSt,{ord:.1,rad:.15,rest:FL+.075,lay:LAYY,fp:V(.22,-1.7,-.1)});
+    rod([V(-.3,-1.7,.12),V(-.27,-1.2,.1),V(-.1,-.62,.06),V(0,-.12,.05)],.035,36,8,mDk,.2,.8);
+    rod([V(.22,-1.7,-.1),V(.21,-1.25,-.09),V(.1,-.7,-.04),V(0,-.12,-.05)],.035,36,8,mDk,.25,.8);
+    plate(1.7,1.1,.025,24,10,function(u,v,w){var t=(u+.85)/1.7,tp=.4+.6*Math.sin(Math.PI*cl(t*.9+.05)),th=v*tp/.42,s=Math.sin(th),c=Math.cos(th);return[u,.42*s-w*s,.42*(1-c)+w*c-.45*(1-t)*(1-t)]},mSt,qe(Math.PI/2,0,0),V(0,-.2,0),.4,.9);
+    rod([V(.78,-.12,0),V(1.08,.25,.02),V(1.02,.85,0),V(.7,1.25,-.02),V(.72,1.58,0),V(1,1.72,0)],.05,64,8,mDk,.5,1.2);
+    rigid(new THREE.CylinderGeometry(.012,.06,.95,12),mBr,{ord:.6,rad:.5,rest:FL+.06,lay:LAYY,fp:V(1.5,1.7,0),fq:qe(0,0,-Math.PI/2-.12)});
+    plate(1.4,.75,.02,16,6,function(u,v,w){var t=u/1.3,s=Math.sin(t),c=Math.cos(t);return[1.3*s-w*s,v,1.3*(1-c)+w*c]},mSt,qe(0,0,-.25),V(-.15,-.4,-.5),.65,.65);
+    plate(.9,.28,.02,12,4,function(u,v,w){var t=u/2.2,s=Math.sin(t),c=Math.cos(t);return[2.2*s-w*s,v,2.2*(1-c)+w*c]},mSt,qe(0,0,-.55),V(-1.1,.4,0),.7,.45);
+    var pts=[],tn=0;for(i=0;i<=120;i++){var ha=i/120*14*Math.PI;pts.push(V(i/120*.8-.4,.07*Math.cos(ha),.07*Math.sin(ha)))}
+    rigid(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),160,.014,6,false),mSt,{ord:.8,rad:.45,rest:FL+.09,fp:V(-1.85,.85,0),fq:qe(0,0,-1)});
+    rod([V(.98,1.76,0),V(.9,2,0),V(.65,2.2,0),V(.35,2.15,0),V(.25,1.95,0)],.013,40,6,mBr,.85,.55);
+    rod([V(-1.5,.6,.05),V(-1.7,.1,.1),V(-1.4,-.2,.15),V(-1.1,-.15,.1)],.013,40,6,mBr,.88,.45);
+    rigid(gear(.26,10,.05,.05),mBr,{ord:.75,rad:.28,rest:FL+.03,lay:LAYX,fp:V(.05,-.42,.45)});
+    rigid(gear(.13,8,.05,.03),mBr,{ord:.78,rad:.15,rest:FL+.03,lay:LAYX,fp:V(.4,-.5,.45),fq:qe(0,0,.2)});
+    [[-.85,.3,.9],[.8,-.2,.92],[.35,.3,.94]].forEach(function(b){});
+    [V(-.85,-1.8,.3),V(.8,-1.8,-.2)].forEach(function(p,n){rigid(new THREE.CylinderGeometry(.085,.085,.07,6),mDk,{ord:.9+n*.02,rad:.15,rest:FL+.04,fp:p});});
+    // bolts (head + shaft), nuts and washers
+    [[V(-.85,-1.8,.3),new Q(),.9],[V(.8,-1.8,-.2),new Q(),.92],[V(.05,-.42,.5),qe(Math.PI/2,0,0),.95]].forEach(function(b){var gb=bolt(mDk);reg(gb,mDk,{ord:b[2],rad:.18,rest:FL+.085,lay:LAYY,fp:b[0],fq:b[1]})});
+    parts.splice(parts.length-6,0);
+    [[V(.2,-1.8,.32),new Q(),.93],[V(1,-1.8,-.15),new Q(),.94],[V(.4,-.5,.5),qe(Math.PI/2,0,0),.96]].forEach(function(n){rigid(new THREE.CylinderGeometry(.085,.085,.07,6),mDk,{ord:n[2],rad:.12,rest:FL+.04,fp:n[0],fq:n[1]})});
+    [[V(-.85,-1.843,.3),new Q()],[V(.8,-1.843,-.2),new Q()],[V(.05,-.42,.47),qe(Math.PI/2,0,0)]].forEach(function(w,n){var wg=new THREE.TorusGeometry(.075,.03,8,20);wg.rotateX(Math.PI/2);wg.scale(1,.55,1);rigid(wg,mBr,{ord:.89+n*.02,rad:.12,rest:FL+.02,fp:w[0],fq:w[1]})});
+    // fix duplicate nut at index (remove stray extra base nuts created above)
+    parts=parts.filter(function(p){return !(p.obj.geometry&&p.obj.geometry.parameters&&p.obj.geometry.parameters.radiusTop===.085&&p.ord<.93&&p.ord>=.9&&p.obj.isMesh)});
+
+    // raw & sorted layouts on the workshop table
+    function place(L,zx,zz,rd){var best,bs=-9;for(var n=0;n<80;n++){var x=(R()*2-1)*zx,z=(R()*2-1)*zz,m=9;L.forEach(function(c){m=Math.min(m,Math.hypot(c[0]-x,c[1]-z)-(c[2]+rd)*.75)});if(m>bs){bs=m;best=[x,z]}if(m>0)break}L.push([best[0],best[1],rd]);return best}
+    var rawL=[],stL=[];
+    parts.forEach(function(q){var a=place(rawL,3.3,1.8,q.rad),b=place(stL,2.1,1.5,q.rad*.8);
+      q.raw={p:new V3(a[0],q.rest,a[1]),q:qe(0,R()*6.28,0).multiply(q.lay)};q.st={p:new V3(b[0],q.rest,b[1]),q:qe(0,R()*6.28,0).multiply(q.lay)};
+      q.ax=new V3(R()-.5,R()-.5,R()-.5).normalize();q.tw=(R()<.5?-1:1)*(.6+R()*1.2)*Math.PI;q.l1=.3+R()*.5;q.l2=.6+R()*.6;q.d1=R();q.d2=R()});
+    // weld seams
+    [[V(-.3,-1.83,.12)],[V(.22,-1.83,-.1)],[V(0,-.1,.07)],[V(0,-.1,-.07)],[V(.8,-.12,0)],[V(1,1.78,.04)],[V(-.25,-.4,-.43)],[V(-.18,-.4,.42)],[V(-.88,.22,0)],[V(-1.6,.5,0)],[V(-1.5,.58,.05)]].forEach(function(b,j,ar){
+      var m=new THREE.MeshStandardMaterial({color:0x2b2724,metalness:.7,roughness:.55}),me=new THREE.Mesh(new THREE.SphereGeometry(1,12,8),m);me.scale.setScalar(.001);me.castShadow=true;world.add(me);me.position.copy(b[0]);
+      beads.push({m:me,p:b[0],mat:m,s:.05+R()*.025,ws:j/ar.length*.62,gs:j/ar.length*.6})});
+    // sparks (deterministic function of scroll => fully reversible)
+    spP=new Float32Array(NP*3);spA=new Float32Array(NP);spG=new THREE.BufferGeometry();spG.setAttribute('position',new THREE.BufferAttribute(spP,3));spG.setAttribute('a',new THREE.BufferAttribute(spA,1));
+    for(i=0;i<NP;i++)sd.push([R()-.5,.4+R(),R()-.5,R()]);
+    var spm=new THREE.ShaderMaterial({transparent:true,depthWrite:false,uniforms:{px:{value:r.getPixelRatio()}},
+      vertexShader:'attribute float a;varying float va;uniform float px;void main(){va=a;vec4 mv=modelViewMatrix*vec4(position,1.);gl_PointSize=a*5.*px*(10./-mv.z)+.1;gl_Position=projectionMatrix*mv;}',
+      fragmentShader:'varying float va;void main(){float d=length(gl_PointCoord-.5);if(d>.5||va<.02)discard;gl_FragColor=vec4(mix(vec3(1.,.35,.05),vec3(1.,.92,.55),smoothstep(.3,0.,d)),min(1.,va*1.4));}'});
+    var spt=new THREE.Points(spG,spm);spt.frustumCulled=false;world.add(spt);
+
+    addEventListener('pointermove',function(e){mx=e.clientX/innerWidth-.5;my=e.clientY/innerHeight-.5});
+    var size=function(){r.setSize(innerWidth,innerHeight,false);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix()};addEventListener('resize',size);size();
+  }else cv.style.display='none';
+
+  var T1=new THREE.Vector3(),T2=new THREE.Vector3(),QQ=new THREE.Quaternion(),SP=new THREE.Quaternion();
+  function frame(P,t,narrow,mrTop,H){
+    var sS=cl((P-.15)/.15),sB=cl((P-.3)/.15),sA=cl((P-.45)/.2),wp=cl((P-.65)/.15),fp=cl((P-.8)/.12),SIDE=[-1,1,-1,1];
+    var i=Math.min(2,Math.floor(t)),f=sm(t-i);
+    rig.position.set((SIDE[i]*(1-f)+SIDE[i+1]*f)*(narrow?0:1.5)*cl((H*.95-mrTop)/(H*.55)),narrow?1.3:0,0);rig.scale.setScalar(narrow?.5:.92);
+    world.rotation.y=mx*.5+sm(cl((P-.8)/.2))*1.1;world.rotation.x=my*.06;
+    parts.forEach(function(q){var k1=wn(sS,q.d1,.5),kb=wn(sB,q.d2,.5),k3=wn(sA,q.ord,.4),o=q.obj;
+      if(q.upd&&Math.abs(kb-q.lb)>.002){q.upd(kb);q.lb=kb}
+      T1.set(q.st.p.x,q.rest-q.mz*kb,q.st.p.z);
+      if(k3>0){T2.lerpVectors(T1,q.fp,k3);T2.y+=Math.sin(Math.PI*k3)*q.l2;QQ.copy(q.st.q).slerp(q.fq,k3);SP.setFromAxisAngle(q.ax,q.tw*.5*Math.sin(Math.PI*k3))}
+      else{T2.lerpVectors(q.raw.p,T1,k1);T2.y+=Math.sin(Math.PI*k1)*q.l1;QQ.copy(q.raw.q).slerp(q.st.q,k1);SP.setFromAxisAngle(q.ax,q.tw*Math.sin(Math.PI*k1))}
+      QQ.premultiply(SP);o.position.copy(T2);o.quaternion.copy(QQ)});
+    var fv=sm(fp),glow=0,gp=null,nb=beads.length;U.fin.value=.9*fv;mats.forEach(function(m){m.roughness=.82-.5*fv});
+    beads.forEach(function(b){var tw=(wp-b.ws)/.38,tg=(fp-b.gs)/.4,g=tw>0?sm(cl(tw*4)):0,h=tw>0?Math.exp(-tw*2.2)*sm(cl(tw*6))*(1-fv):0,gg=cl(tg),a=0;
+      b.m.scale.set(b.s*g*(1+.2*gg),b.s*g*(1-.55*gg),b.s*g*(1+.2*gg)||.001);
+      b.mat.emissive.setRGB(h,h*.38,h*.06);b.mat.color.setRGB(.17+.55*gg,.15+.59*gg,.14+.62*gg);
+      if(tw>0&&tw<1)a=Math.sin(Math.PI*tw);else if(tg>0&&tg<1)a=.4*Math.sin(Math.PI*tg);
+      if(a>glow){glow=a;gp=b.p}});
+    wl.intensity=glow*2.4;if(gp)wl.position.set(gp.x,gp.y+.2,gp.z+.2);
+    for(var k=0;k<NP;k++){var b=beads[k%nb],tw=(wp-b.ws)/.38,tg=(fp-b.gs)/.4,tt=-1,am=1,d=sd[k];
+      if(tw>0&&tw<1)tt=tw;else if(tg>0&&tg<1){tt=tg;am=.5}
+      if(tt<0||(am<1&&k%3)){spA[k]=0;continue}
+      var ag=(tt*4+d[3])%1;spP[k*3]=b.p.x+d[0]*ag*1.3;spP[k*3+1]=b.p.y+d[1]*ag*1.1-ag*ag*1.4;spP[k*3+2]=b.p.z+d[2]*ag*1.3;spA[k]=(1-ag)*Math.sin(Math.PI*tt)*am}
+    spG.attributes.position.needsUpdate=true;spG.attributes.a.needsUpdate=true;
+    var si=P<.15?0:P<.3?1:P<.45?2:P<.65?3:P<.8?4:P<.92?5:6;
+    if(si!==lastS){lastS=si;matn.textContent=STG[si][0];dot.style.setProperty('--sw',STG[si][1])}}
+
+  var hero=$('#hero'),mats_=$('#mats'),pbar=$('#pbar'),mq=$('#mq');
+  function loop(){
+    var H=innerHeight,y=scrollY,max=document.body.scrollHeight-H;
+    pbar.style.transform='scaleX('+(max>0?y/max:0)+')';
+    mq.style.transform='translateX('+(-y*.25%(mq.scrollWidth/2))+'px)';
+    var hr=hero.getBoundingClientRect(),mr=mats_.getBoundingClientRect();
+    var vis=(hr.bottom>H*.1)||(mr.top<H*.95&&mr.bottom>H*.05);
+    hud.classList.toggle('on',mr.top<H*.5&&mr.bottom>H*.5);
+    if(r){
+      op+=((vis?1:0)-op)*.1;cv.style.opacity=op.toFixed(3);
+      var P=cl(-mr.top/(mr.height-H));
+      if(op>.01){frame(P,P*3,innerWidth<820,mr.top,H);r.render(sc,cam)}}
+    requestAnimationFrame(loop)}
+  loop();
+})();
+</script>
+</body>
+</html>
