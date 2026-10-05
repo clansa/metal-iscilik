@@ -160,69 +160,253 @@ details p{margin-top:.8rem;max-width:40rem}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 (function(){
+  // Utility functions
   function cl(v){return Math.max(0,Math.min(1,v))}
+  function lerp(a,b,t){return a+(b-a)*t;}
+  function easeInOut(t){return t<0.5 ? 2*t*t : -1+(4-2*t)*t;}
+  function getPhase(p,s,e){return cl((p-s)/(e-s));}
+
   var $=function(s){return document.querySelector(s)};
+  
+  // UI Interactions
   var io=new IntersectionObserver(function(es){es.forEach(function(e){if(!e.isIntersecting)return;e.target.classList.add('on');var b=e.target.querySelector('[data-n]');if(b){var n=+b.dataset.n,s=performance.now();(function f(t){var k=cl((t-s)/1400);b.textContent=Math.round(n*(1-Math.pow(1-k,3)));if(k<1)requestAnimationFrame(f)})(s)}io.unobserve(e.target)})},{threshold:.25});
   document.querySelectorAll('.rv').forEach(function(el){io.observe(el)});
+  
   var dot=$('#dot'),matn=$('#matn'),hud=$('#hud');dot.style.setProperty('--sw','#d2a94f');
   var mio=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){var m=e.target.dataset.m.split('|');matn.textContent=m[0];dot.style.setProperty('--sw',m[1])}})},{threshold:.5});
   document.querySelectorAll('[data-m]').forEach(function(s){mio.observe(s)});
 
+  // 3D Scene Setup
   var cv=$('#gl'),r;
   try{r=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true})}catch(e){r=null}
-  var objs=[],sc,cam,mx=0,my=0,op=1;
+  var partsData=[],sc,cam,mx=0,my=0,op=1;
+  var finalGroup, weldGroup;
+  var rustyCol=new THREE.Color(0x4a3222), finishCol=new THREE.Color(0x9a9d9f);
+  
   if(r){
-    r.setPixelRatio(Math.min(devicePixelRatio,2));r.toneMapping=THREE.ACESFilmicToneMapping;r.toneMappingExposure=1.1;r.outputEncoding=THREE.sRGBEncoding;
-    sc=new THREE.Scene();cam=new THREE.PerspectiveCamera(35,1,.1,50);cam.position.z=7.5;
-    // stüdyo ışık ortamı
+    r.setPixelRatio(Math.min(devicePixelRatio,2));r.toneMapping=THREE.ACESFilmicToneMapping;r.toneMappingExposure=1.2;r.outputEncoding=THREE.sRGBEncoding;
+    sc=new THREE.Scene();cam=new THREE.PerspectiveCamera(35,1,.1,50);cam.position.z=8.5;
+    
+    // Environment Map & Lighting
     var c=document.createElement('canvas');c.width=1024;c.height=512;var x=c.getContext('2d');
     var g=x.createLinearGradient(0,0,0,512);g.addColorStop(0,'#f4f4f2');g.addColorStop(.5,'#a9adb0');g.addColorStop(1,'#2a2c2e');x.fillStyle=g;x.fillRect(0,0,1024,512);
     [[100,60,160,200,1],[420,30,220,90,1],[760,80,120,260,.95],[300,330,400,26,.7],[0,400,1024,12,.25]].forEach(function(b){x.fillStyle='rgba(255,255,255,'+b[4]+')';x.fillRect(b[0],b[1],b[2],b[3])});
     var tex=new THREE.CanvasTexture(c);tex.mapping=THREE.EquirectangularReflectionMapping;
     sc.environment=new THREE.PMREMGenerator(r).fromEquirectangular(tex).texture;
-    // el dövmesi bump dokusu
+    
+    var dirLight=new THREE.DirectionalLight(0xffeedd,1.5);dirLight.position.set(5,10,7);sc.add(dirLight);
+    
+    // Bump maps
     function hammer(){var k=document.createElement('canvas');k.width=512;k.height=512;var q=k.getContext('2d');q.fillStyle='#808080';q.fillRect(0,0,512,512);
       for(var i=0;i<520;i++){var px=Math.random()*512,py=Math.random()*512,rd=14+Math.random()*16;
-        [[0,0],[512,0],[-512,0]].forEach(function(o){var gg=q.createRadialGradient(px+o[0],py,0,px+o[0],py,rd);gg.addColorStop(0,'rgba(30,30,30,.9)');gg.addColorStop(.75,'rgba(200,200,200,.8)');gg.addColorStop(1,'rgba(128,128,128,0)');q.fillStyle=gg;q.beginPath();q.arc(px+o[0],py,rd,0,7);q.fill()})}
+      [[0,0],[512,0],[-512,0]].forEach(function(o){var gg=q.createRadialGradient(px+o[0],py,0,px+o[0],py,rd);gg.addColorStop(0,'rgba(30,30,30,.9)');gg.addColorStop(.75,'rgba(200,200,200,.8)');gg.addColorStop(1,'rgba(128,128,128,0)');q.fillStyle=gg;q.beginPath();q.arc(px+o[0],py,rd,0,7);q.fill()})}
       var t=new THREE.CanvasTexture(k);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(5,3);return t}
     function brushed(){var k=document.createElement('canvas');k.width=8;k.height=512;var q=k.getContext('2d');
       for(var i=0;i<512;i++){var v=110+Math.random()*50;q.fillStyle='rgb('+v+','+v+','+v+')';q.fillRect(0,i,8,1)}
       var t=new THREE.CanvasTexture(k);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(1,3);return t}
-    function lathe(pts,seg){var curve=new THREE.SplineCurve(pts.map(function(p){return new THREE.Vector2(p[0],p[1])}));
-      var gm=new THREE.LatheGeometry(curve.getPoints(seg||90),96);gm.computeBoundingBox();var b=gm.boundingBox,cx=(b.max.y+b.min.y)/2;gm.translate(0,-cx,0);
-      var h=b.max.y-b.min.y,w=(b.max.x)*2;return{g:gm,k:Math.min(3.3/h,3.6/w)}}
-    var defs=[
-      {p:[[0,0],[.5,0],[.62,.08],[.95,.8],[1.1,1.5],[.95,2.2],[.5,2.7],[.36,3.1],[.5,3.4],[.64,3.5]],m:{color:0xd9a94a,roughness:.22,bump:hammer(),bs:2.2}},
-      {p:[[0,0],[.9,0],[.9,.12],[.5,.32],[.22,.6],[.28,.95],[.13,1.25],[.13,1.8],[.32,2.05],[.2,2.3],[.17,2.9],[.4,3.2],[.42,3.5],[.3,3.5]],m:{color:0xb9bfc3,roughness:.2,bump:brushed(),bs:.6}},
-      {p:[[0,0],[.5,.03],[1.05,.32],[1.55,.95],[1.75,1.3],[1.69,1.32],[1.5,.98],[1.0,.4],[.5,.12],[0,.1]],m:{color:0xc2603a,roughness:.28,bump:hammer(),bs:3}},
-      {p:[[0,0],[.6,0],[.9,.35],[1.1,1.2],[.85,2.0],[.38,2.4],[.3,3.0],[.46,3.35],[.54,3.4]],m:{color:0x555a5f,roughness:.3,bump:brushed(),bs:.8}}
-    ];
-    defs.forEach(function(d){var L=lathe(d.p);var mt=new THREE.MeshStandardMaterial({color:d.m.color,metalness:1,roughness:d.m.roughness,envMapIntensity:1.35,bumpMap:d.m.bump,bumpScale:d.m.bs,side:THREE.DoubleSide});
-      var o=new THREE.Mesh(L.g,mt);o.userData.k=L.k;o.userData.x=0;sc.add(o);objs.push(o)});
+
+    var texHammer=hammer(), texBrushed=brushed();
+    
+    // The Assembly Container
+    finalGroup=new THREE.Group();
+    sc.add(finalGroup);
+
+    // Assembly Parts Generator
+    function createPart(geom, finalP, finalR, bendFn, isBrushed){
+      var mat=new THREE.MeshStandardMaterial({
+        color: rustyCol.clone(), roughness:0.9, metalness:0.4,
+        bumpMap: isBrushed?texBrushed:texHammer, bumpScale:0.04, side:THREE.DoubleSide
+      });
+      var mesh=new THREE.Mesh(geom, mat);
+      
+      var flat=null, curved=null;
+      if(bendFn){
+        flat=new Float32Array(geom.attributes.position.array);
+        curved=new Float32Array(flat.length);
+        var v=new THREE.Vector3();
+        for(var i=0; i<flat.length; i+=3){
+          v.set(flat[i], flat[i+1], flat[i+2]);
+          bendFn(v);
+          curved[i]=v.x; curved[i+1]=v.y; curved[i+2]=v.z;
+        }
+      }
+
+      var sDist = 6+Math.random()*6, sAng = Math.random()*Math.PI*2;
+      var pRaw = new THREE.Vector3(Math.cos(sAng)*sDist, (Math.random()-0.5)*10, Math.sin(sAng)*sDist - 2);
+      var rRaw = new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.random()*10, Math.random()*10, Math.random()*10));
+
+      var pSort = new THREE.Vector3((Math.random()-0.5)*8, -4 + Math.random()*2, (Math.random()-0.5)*4 - 1);
+      var rSort = new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI/2, Math.random()*Math.PI, 0));
+
+      var qFinal = new THREE.Quaternion().setFromEuler(finalR);
+
+      mesh.position.copy(pRaw); mesh.quaternion.copy(rRaw);
+      finalGroup.add(mesh);
+
+      partsData.push({
+        mesh:mesh, pRaw:pRaw, rRaw:rRaw, pSort:pSort, rSort:rSort, pFinal:finalP, rFinal:qFinal, 
+        isBend:!!bendFn, flat:flat, curved:curved
+      });
+    }
+
+    // --- CONSTRUCT THE SCULPTURE PARTS ---
+    // 1. Base Gear / Ring
+    createPart(new THREE.CylinderGeometry(1.4, 1.5, 0.3, 24), new THREE.Vector3(0,-1.6,0), new THREE.Euler(0,0,0));
+    // 2. Top Rim
+    createPart(new THREE.TorusGeometry(0.8, 0.12, 12, 32), new THREE.Vector3(0,1.7,0), new THREE.Euler(Math.PI/2,0,0));
+    // 3. Core Structural Pipes
+    createPart(new THREE.CylinderGeometry(0.5, 0.5, 1.2, 16), new THREE.Vector3(0,-0.8,0), new THREE.Euler(0,0.5,0), null, true);
+    createPart(new THREE.CylinderGeometry(0.45, 0.45, 1.2, 16), new THREE.Vector3(0,0.3,0), new THREE.Euler(0,1.2,0), null, true);
+    createPart(new THREE.CylinderGeometry(0.5, 0.5, 1.2, 16), new THREE.Vector3(0,1.2,0), new THREE.Euler(0,2.0,0), null, true);
+    
+    // 4. Outer Ribs (Bending rods)
+    var ribGeom=new THREE.CylinderGeometry(0.08, 0.08, 3.6, 6, 16);
+    for(var i=0; i<8; i++){
+      createPart(ribGeom.clone(), new THREE.Vector3(0,0.1,0), new THREE.Euler(0,(i/8)*Math.PI*2,0), function(v){
+        v.z += Math.sin((v.y + 1.8)/3.6 * Math.PI) * 1.35; // Bow outwards
+      }, true);
+    }
+    
+    // 5. Deformed Armor Plates (Bending scrap metal)
+    var plateGeom=new THREE.PlaneGeometry(1.6, 2.4, 8, 8);
+    for(var i=0; i<4; i++){
+      createPart(plateGeom.clone(), new THREE.Vector3(0,0,0), new THREE.Euler(0, (i/4)*Math.PI*2 + Math.PI/4, 0), function(v){
+        var radius = 1.35;
+        var theta = v.x / radius;
+        v.z = radius * Math.cos(theta) - radius;
+        v.x = radius * Math.sin(theta);
+        v.z += Math.sin((v.y + 1.2)/2.4 * Math.PI) * 0.5; // Belly curve
+      });
+    }
+
+    // 6. Nuts, Bolts, Gears (Small joining details)
+    var nutGeom=new THREE.CylinderGeometry(0.12, 0.12, 0.15, 6);
+    for(var i=0; i<12; i++){
+      var a = (i/12)*Math.PI*2;
+      var yPos = (i%2===0) ? 1.1 : -0.9;
+      createPart(nutGeom.clone(), new THREE.Vector3(Math.sin(a)*1.45, yPos, Math.cos(a)*1.45), new THREE.Euler(Math.PI/2, a, 0));
+    }
+
+    // --- WELDING EFFECTS ---
+    weldGroup = new THREE.Group();
+    weldGroup.visible=false;
+    var weldMat = new THREE.MeshBasicMaterial({color:0xff9922, transparent:true, blending:THREE.AdditiveBlending, depthWrite:false});
+    for(var i=0; i<8; i++){
+      var w=new THREE.Mesh(new THREE.SphereGeometry(0.2,8,8), weldMat);
+      w.position.set(Math.sin(i)*1.35, (i%2===0)?1.3:-1.1, Math.cos(i)*1.35);
+      weldGroup.add(w);
+    }
+    var weldLight = new THREE.PointLight(0xffaa22, 0, 6);
+    weldGroup.add(weldLight);
+    finalGroup.add(weldGroup);
+
+    // Mouse Tracking
     addEventListener('pointermove',function(e){mx=e.clientX/innerWidth-.5;my=e.clientY/innerHeight-.5});
-    var size=function(){r.setSize(innerWidth,innerHeight,false);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix()};addEventListener('resize',size);size();
+    var size=function(){r.setSize(innerWidth,innerHeight,false);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix()};
+    addEventListener('resize',size);size();
   }else cv.style.display='none';
-  var hero=$('#hero'),mats=$('#mats'),pbar=$('#pbar'),mq=$('#mq'),SIDE=[-1,1,-1,1];
+
+  // --- SCROLL ANIMATION LOOP ---
+  var hero=$('#hero'),mats=$('#mats'),pbar=$('#pbar'),mq=$('#mq');
+  finalGroup.userData.x = 0;
+
   function loop(){
     var H=innerHeight,y=scrollY,max=document.body.scrollHeight-H;
     pbar.style.transform='scaleX('+(max>0?y/max:0)+')';
     mq.style.transform='translateX('+(-y*.25%(mq.scrollWidth/2))+'px)';
+    
     var hr=hero.getBoundingClientRect(),mr=mats.getBoundingClientRect();
     var vis=(hr.bottom>H*.1)||(mr.top<H*.95&&mr.bottom>H*.05);
     hud.classList.toggle('on',mr.top<H*.5&&mr.bottom>H*.5);
+    
     if(r){
-      op+=((vis?1:0)-op)*.1;cv.style.opacity=op.toFixed(3);
-      var mp=cl(-mr.top/(mr.height-H)),t=mp*3,narrow=innerWidth<820,now=performance.now();
-      objs.forEach(function(o,n){
-        var d=n-t,ad=Math.abs(d),tx=SIDE[n]*(narrow?0:1.9)+d*(narrow?4.5:7);
-        if(n===0&&mr.top>H*.9)tx=0;
-        o.userData.x+=(tx-o.userData.x)*.1;
-        var s=o.userData.k*(narrow?.62:.95)*(1-.2*Math.min(1,ad));
-        o.scale.setScalar(s);o.visible=op>.01&&Math.abs(o.userData.x)<9;
-        o.position.set(o.userData.x,(narrow?1.3:0)+Math.sin(now/1700+n)*.06-ad*.15,0);
-        o.rotation.y=t*1.7+n*1.2+mx*.9+y/H*.15;o.rotation.x=.12+my*.2;o.rotation.z=0});
-      if(op>.01)r.render(sc,cam)}
-    requestAnimationFrame(loop)}
+      op+=((vis?1:0)-op)*.1;
+      cv.style.opacity=op.toFixed(3);
+      
+      // Calculate overall scroll progress through the showcase (0 to 1)
+      var mp = cl(-mr.top / (mr.height - H));
+      var P = mp;
+
+      var narrow = innerWidth < 820;
+      
+      // Calculate Target X position to make room for text sections
+      var targetX = 0;
+      if(!narrow) {
+        var sectionIdx = P * 4;
+        // Shift left for right-aligned text (.mat.r), right for left-aligned (.mat)
+        var isTextOnRight = Math.floor(sectionIdx) % 2 === 0;
+        targetX = isTextOnRight ? -2.2 : 2.2;
+        if(P < 0.02 || P > 0.98) targetX = 0; // Return to center at extremes
+      }
+      
+      // Smooth group positioning and slow cinematic rotation
+      finalGroup.userData.x += (targetX - finalGroup.userData.x) * 0.06;
+      finalGroup.position.x = finalGroup.userData.x;
+      finalGroup.position.y = Math.sin(performance.now()/1600)*0.1 - (narrow ? -0.4 : 0);
+      
+      finalGroup.rotation.y = P * Math.PI * 2 + mx * 0.5;
+      finalGroup.rotation.x = 0.1 + my * 0.2;
+
+      // Extract animation phases from master timeline P
+      var pRawSort  = easeInOut(getPhase(P, 0.05, 0.25)); // Gathering
+      var pBend     = easeInOut(getPhase(P, 0.25, 0.45)); // Shaping
+      var pAssemble = easeInOut(getPhase(P, 0.45, 0.65)); // Connecting
+      var pWeld     = getPhase(P, 0.65, 0.80);            // Fusing
+      var pFinish   = easeInOut(getPhase(P, 0.80, 0.92)); // Polishing
+
+      // Update every mechanical part
+      partsData.forEach(function(p, i){
+        // 1. Transform Engine
+        if(P < 0.35) { 
+          p.mesh.position.lerpVectors(p.pRaw, p.pSort, pRawSort);
+          p.mesh.quaternion.slerpQuaternions(p.rRaw, p.rSort, pRawSort);
+          // Add chaotic floating while raw
+          if(P < 0.15) {
+            p.mesh.rotation.x += 0.005 * (i%3===0?1:-1);
+            p.mesh.rotation.z += 0.003 * (i%2===0?1:-1);
+          }
+        } else {
+          p.mesh.position.lerpVectors(p.pSort, p.pFinal, pAssemble);
+          p.mesh.quaternion.slerpQuaternions(p.rSort, p.rFinal, pAssemble);
+        }
+
+        // 2. Physical Deformation (Bending)
+        if(p.isBend){
+          var arr = p.mesh.geometry.attributes.position.array;
+          for(var j=0; j<arr.length; j++){
+            arr[j] = lerp(p.flat[j], p.curved[j], pBend);
+          }
+          p.mesh.geometry.attributes.position.needsUpdate = true;
+          if(pBend > 0 && pBend < 1) p.mesh.geometry.computeVertexNormals();
+        }
+
+        // 3. Surface Finishing (Material processing)
+        p.mesh.material.color.lerpColors(rustyCol, finishCol, pFinish);
+        p.mesh.material.roughness = lerp(0.9, 0.35, pFinish);
+        p.mesh.material.metalness = lerp(0.4, 0.85, pFinish);
+      });
+
+      // 4. Welding Sparks Effect
+      if(pWeld > 0 && pWeld < 1){
+        weldGroup.visible = true;
+        // Flickering math
+        var intensity = Math.pow(Math.sin(pWeld * Math.PI * 25), 4) * Math.sin(pWeld * Math.PI);
+        weldLight.intensity = intensity * 3;
+        weldGroup.children.forEach(function(c){
+          if(c.isMesh) {
+            c.scale.setScalar(0.4 + intensity * 1.2);
+            c.material.opacity = intensity * 0.9;
+          }
+        });
+      } else {
+        weldGroup.visible = false;
+        weldLight.intensity = 0;
+      }
+
+      if(op>.01) r.render(sc,cam);
+    }
+    requestAnimationFrame(loop);
+  }
   loop();
 })();
 </script>
