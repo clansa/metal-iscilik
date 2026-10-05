@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kor Atölye — Metalin en sessiz hali</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,500;12..96,700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#e3e4e2;--ink:#16181a;--mute:#6b6f72;--cu:#c2603a;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit;margin:0}
+body{background:var(--bg);color:var(--ink);font:400 1rem/1.6 'Bricolage Grotesque',system-ui,sans-serif;overflow-x:hidden}
+canvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;display:block}
+:focus-visible{outline:2px solid var(--cu);outline-offset:4px}
+nav{position:fixed;top:env(safe-area-inset-top,0px);left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:1.3rem clamp(1.2rem,4vw,3rem);z-index:10}
+nav b{font-weight:700;letter-spacing:-.03em;font-size:1.3rem}
+nav a{font-size:.85rem;font-weight:500;text-decoration:none;border:1px solid var(--ink);border-radius:99px;padding:.55rem 1.2rem;transition:.3s}
+nav a:hover{background:var(--ink);color:var(--bg)}
+/* material indicator */
+.hud{position:fixed;left:clamp(1.2rem,4vw,3rem);bottom:calc(1.5rem + env(safe-area-inset-bottom,0px));z-index:10;display:flex;align-items:center;gap:.8rem;font-size:.8rem;font-weight:500}
+.dot{width:1.1rem;height:1.1rem;border-radius:50%;background:var(--sw,#999);box-shadow:inset -3px -3px 6px #0005,inset 2px 2px 4px #fff8;transition:background .6s}
+.rail{position:fixed;right:clamp(1.2rem,4vw,3rem);top:50%;width:2px;height:120px;background:#0002;transform:translateY(-50%);z-index:10}
+.rail i{display:block;width:100%;height:100%;background:var(--ink);transform-origin:0 0;transform:scaleY(var(--p,0))}
+section{position:relative;z-index:5;min-height:100vh;min-height:100svh;display:flex;align-items:center;padding:6rem clamp(1.2rem,6vw,6rem)}
+.txt{max-width:30rem}
+.r{justify-content:flex-end}
+h1,h2{font-weight:700;letter-spacing:-.05em;line-height:.92}
+h1{font-size:clamp(3.4rem,11vw,10rem);max-width:9ch}
+h2{font-size:clamp(2.6rem,6.5vw,6rem)}
+.txt p{color:var(--mute);margin-top:1.5rem;font-size:1.05rem}
+.tag{display:inline-block;margin-top:1.8rem;font-size:.85rem;font-weight:500;border-bottom:1px solid var(--ink);padding-bottom:.2rem}
+.hero{align-items:flex-end;padding-bottom:7rem}
+.hero .txt{max-width:none}
+.hero p{max-width:28rem}
+.scrollhint{position:absolute;right:clamp(1.2rem,6vw,6rem);bottom:6.5rem;font-size:.8rem;color:var(--mute);writing-mode:vertical-rl}
+.stats{display:flex;gap:3rem;margin-top:2.5rem}
+.stats b{display:block;font-size:2.4rem;letter-spacing:-.04em;font-weight:500}
+.stats span{color:var(--mute);font-size:.85rem}
+.cta{justify-content:center;text-align:center;flex-direction:column}
+.cta h2{max-width:11ch;margin:0 auto}
+.cta p{color:var(--mute);margin:1.5rem auto 2.5rem;max-width:32rem}
+.btn{align-self:center;display:inline-flex;gap:.8rem;align-items:center;background:var(--ink);color:var(--bg);padding:1.2rem 2.4rem;border-radius:99px;text-decoration:none;font-weight:500;transition:transform .3s,background .3s}
+.btn:hover{background:var(--cu);transform:scale(1.04)}
+.foot{margin-top:4rem;color:var(--mute);font-size:.8rem}
+.rv{opacity:0;transform:translateY(30px);filter:blur(6px);transition:1s cubic-bezier(.2,.7,.2,1)}
+.rv.on{opacity:1;transform:none;filter:none}
+@media(max-width:760px){section{align-items:flex-end;padding-bottom:5rem}.r{justify-content:flex-start}.rail{display:none}.txt p{background:#e3e4e2cc;border-radius:12px;padding:.6rem .8rem;margin-left:-.8rem}.scrollhint{display:none}}
+@media(prefers-reduced-motion:reduce){.rv{opacity:1;transform:none;filter:none;transition:none}}
+</style>
+</head>
+<body>
+<canvas id="gl" aria-hidden="true"></canvas>
+<nav><b>kor.</b><a href="#shop">Koleksiyon</a></nav>
+<div class="hud"><span class="dot" id="dot"></span><span id="mat">Çelik</span></div>
+<div class="rail"><i id="rail"></i></div>
+
+<section class="hero">
+  <div class="txt rv"><h1>Metalin en sessiz hali.</h1><p>El yapımı metal heykeller. Tek seferlik, numaralı, yaşam boyu sizin.</p></div>
+  <span class="scrollhint">kaydırın</span>
+</section>
+
+<section class="r" data-m="Çelik|#aeb4b8">
+  <div class="txt rv"><h2>Çelik.<br>Soğuk, kesin.</h2><p>Fırçalanmış paslanmaz çelik, ışığı çizgi çizgi böler. Minimal mekânların en güçlü sessizliği.</p><span class="tag">Fırçalı yüzey · özel ölçü</span></div>
+</section>
+
+<section data-m="Pirinç|#d2a94f">
+  <div class="txt rv"><h2>Pirinç.<br>Sıcak, canlı.</h2><p>Zamanla koyulaşır, dokunuldukça parlar. Her halka elle şekillenir ve yıllar içinde sahibini tanır.</p><span class="tag">El dövmesi · patinasız</span></div>
+</section>
+
+<section class="r" data-m="Bakır|#c2603a">
+  <div class="txt rv"><h2>Bakır.<br>Ateşin rengi.</h2><p>Isıl işlemle her yüzeyde farklı bir tonlama doğar. İki parça asla aynı olmaz.</p>
+  <div class="stats"><div><b>1/1</b><span>her eser tek</span></div><div><b>40+</b><span>saat el emeği</span></div></div></div>
+</section>
+
+<section class="cta" id="shop" data-m="Bakır|#c2603a">
+  <h2 class="rv">Sizin için hangisi?</h2>
+  <p class="rv">Güncel eserler Shopier mağazamızda. Güvenli ödeme, sigortalı teslimat.</p>
+  <a class="btn rv" href="https://www.shopier.com/" target="_blank" rel="noopener">Shopier'da incele <span>↗</span></a>
+  <div class="foot rv">@koratolye · atolye@koratolye.com · İstanbul</div>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+  var root=document.documentElement,rail=document.getElementById('rail'),mat=document.getElementById('mat'),dot=document.getElementById('dot');
+  function ss(a,b,x){x=Math.max(0,Math.min(1,(x-a)/(b-a)));return x*x*(3-2*x)}
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('on')}})},{threshold:.25});
+  document.querySelectorAll('.rv').forEach(function(el){io.observe(el)});
+  var secs=[].slice.call(document.querySelectorAll('section'));
+  var mio=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting&&e.target.dataset.m){var m=e.target.dataset.m.split('|');mat.textContent=m[0];dot.style.setProperty('--sw',m[1])}})},{threshold:.5});
+  secs.forEach(function(s){mio.observe(s)});
+  dot.style.setProperty('--sw','#aeb4b8');
+  var cv=document.getElementById('gl'),r;
+  try{r=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true})}catch(e){return}
+  r.setPixelRatio(Math.min(devicePixelRatio,2));r.toneMapping=THREE.ACESFilmicToneMapping;r.toneMappingExposure=1.05;r.outputEncoding=THREE.sRGBEncoding;
+  var sc=new THREE.Scene(),cam=new THREE.PerspectiveCamera(35,1,.1,50);cam.position.z=7;
+  // procedural studio environment (softboxes) for photoreal metal reflections
+  var c=document.createElement('canvas');c.width=1024;c.height=512;var x=c.getContext('2d');
+  var g=x.createLinearGradient(0,0,0,512);g.addColorStop(0,'#f4f4f2');g.addColorStop(.5,'#a9adb0');g.addColorStop(1,'#2a2c2e');x.fillStyle=g;x.fillRect(0,0,1024,512);
+  function box(a,b,w,h,al){x.fillStyle='rgba(255,255,255,'+al+')';x.fillRect(a,b,w,h)}
+  box(100,60,160,200,1);box(420,30,220,90,1);box(760,80,120,260,.95);box(300,330,400,26,.7);box(0,400,1024,12,.25);
+  var tex=new THREE.CanvasTexture(c);tex.mapping=THREE.EquirectangularReflectionMapping;
+  var pm=new THREE.PMREMGenerator(r);var env=pm.fromEquirectangular(tex).texture;sc.environment=env;
+  function M(col,rough){return new THREE.MeshStandardMaterial({color:col,metalness:1,roughness:rough,envMapIntensity:1.3})}
+  var o1=new THREE.Mesh(new THREE.TorusKnotGeometry(1,.3,320,48,2,3),M(0xb9bfc3,.18));
+  var o2=new THREE.Group();for(var i=0;i<7;i++){var t=new THREE.Mesh(new THREE.TorusGeometry(1.05,.11,48,160),M(0xd9a94a,.2));t.rotation.y=i*Math.PI/7;o2.add(t)}
+  var o3=new THREE.Mesh(new THREE.IcosahedronGeometry(1.15,1),new THREE.MeshStandardMaterial({color:0xc2603a,metalness:1,roughness:.28,flatShading:true,envMapIntensity:1.4}));
+  var objs=[o1,o2,o3];objs.forEach(function(o){sc.add(o)});
+  var sh=new THREE.Mesh(new THREE.CircleGeometry(1.4,48),new THREE.MeshBasicMaterial({color:0,transparent:true,opacity:.12}));sh.rotation.x=-Math.PI/2;sh.position.y=-1.9;sc.add(sh);
+  var mx=0,my=0;addEventListener('pointermove',function(e){mx=e.clientX/innerWidth-.5;my=e.clientY/innerHeight-.5});
+  var X=[0,1,-1,1,0]; // sağ/sol konumlar: metin tarafının tersi
+  function size(){var w=innerWidth,h=innerHeight;r.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()}
+  addEventListener('resize',size);size();
+  var cur=0;
+  function loop(){
+    var max=document.body.scrollHeight-innerHeight,p=max>0?scrollY/max:0,t=p*4;
+    rail.style.transform='scaleY('+p+')';
+    var i=Math.min(3,Math.floor(t)),f=t-i,k=ss(0,1,f);
+    var narrow=innerWidth<760,px=(X[i]+(X[i+1]-X[i])*k)*(narrow?0:1.9),py=narrow?1.2:0;
+    cur+=(px-cur)*.08;
+    var w=[1-ss(1.2,1.8,t),ss(1.2,1.8,t)-ss(2.2,2.8,t),ss(2.2,2.8,t)];
+    objs.forEach(function(o,n){var s=Math.max(.0001,w[n])*(narrow?.7:1);o.scale.setScalar(s);o.visible=w[n]>.003;
+      o.position.set(cur,py+Math.sin(performance.now()/1500+n)*.08,0);
+      o.rotation.y=t*2.6+mx*.8+(n*.6);o.rotation.x=.3+t*.9+my*.5;});
+    sh.position.x=cur;sh.scale.setScalar(.8+.2*Math.sin(performance.now()/1500));sh.position.y=py-1.9*(narrow?.7:1);
+    r.render(sc,cam);requestAnimationFrame(loop)}
+  loop();
+})();
+</script>
+</body>
+</html>
