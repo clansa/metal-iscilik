@@ -13,7 +13,7 @@ body{background:var(--bg);color:var(--ink);font:400 1rem/1.6 'Bricolage Grotesqu
 canvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;display:block;pointer-events:none}
 :focus-visible{outline:2px solid var(--cu);outline-offset:4px}
 nav{position:fixed;top:env(safe-area-inset-top,0px);left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:1.3rem clamp(1.2rem,4vw,3rem);z-index:20}
-nav b{font-weight:700;letter-spacing:-.03em;font-size:1.3rem}
+nav .logo{height:8rem;width:auto;display:block;object-fit:contain}
 nav a{font-size:.85rem;font-weight:500;text-decoration:none;border:1px solid var(--ink);border-radius:99px;padding:.55rem 1.2rem;transition:.3s;background:var(--bg)}
 nav a:hover{background:var(--ink);color:var(--bg)}
 .pbar{position:fixed;left:0;top:0;height:3px;width:100%;background:var(--cu);transform-origin:0 0;transform:scaleX(0);z-index:30}
@@ -36,6 +36,32 @@ p{color:var(--mute)}
 .mq{background:var(--ink);color:var(--bg);overflow:hidden;padding:1.6rem 0;white-space:nowrap}
 .mq div{display:inline-block;font-size:clamp(2.2rem,6vw,5rem);font-weight:700;letter-spacing:-.04em;will-change:transform}
 .mq i{font-style:normal;color:var(--cu);margin:0 1.5rem}
+
+/* Animasyonlu Ürün Vitrini (Exploded View) CSS Başlangıcı */
+.exploded-showcase {
+  height: 200vh; /* Scroll alanı yaratmak için uzun bir yükseklik */
+  position: relative;
+  background: transparent; /* 3D arka planın görünmesi için şeffaf */
+  z-index: 10;
+}
+.exploded-container {
+  position: sticky;
+  top: 0;
+  height: 100vh; /* Ekranı tam kaplar */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+.part {
+  position: absolute;
+  max-height: 80vh;
+  width: auto;
+  object-fit: contain;
+  will-change: transform, opacity;
+}
+/* Animasyon CSS Bitişi */
+
 /* showcase */
 .mat{min-height:110svh;display:flex;align-items:center}
 .mat.r{justify-content:flex-end}
@@ -85,7 +111,7 @@ details p{margin-top:.8rem;max-width:40rem}
 <body>
 <div class="pbar" id="pbar"></div>
 <canvas id="gl" aria-hidden="true"></canvas>
-<nav><b>kor.</b><a href="#shop">Koleksiyon</a></nav>
+<nav><img src="mg_logo.webp" alt="Kor Atölye" class="logo"><a href="#shop">Koleksiyon</a></nav>
 <div class="hud" id="hud"><span class="dot" id="dot"></span><span id="matn">Amfora Vazo</span></div>
 
 <section class="hero" id="hero">
@@ -103,6 +129,19 @@ details p{margin-top:.8rem;max-width:40rem}
 </section>
 
 <div class="mq"><div id="mq">Dövme<i>/</i>Bükme<i>/</i>Kaynak<i>/</i>Patina<i>/</i>Cila<i>/</i>Dövme<i>/</i>Bükme<i>/</i>Kaynak<i>/</i>Patina<i>/</i>Cila<i>/</i></div></div>
+
+<!-- YENİ EKLENEN: Exploded View (Parçaların Birleştiği Alan) -->
+<section class="exploded-showcase">
+  <div class="exploded-container">
+    <!-- PNG dosyalarının isimlerini buraya gireceksin -->
+    <img src="parca-zemin.png" class="part" id="part-base" alt="Alt Tabla">
+    <img src="parca-govde.png" class="part" id="part-body" alt="Gövde">
+    <img src="parca-zincir.png" class="part" id="part-chain" alt="Zincir ve Dişli">
+    <img src="parca-ampul.png" class="part" id="part-bulb" alt="Ampul">
+    <img src="parca-vida.png" class="part" id="part-screws" alt="Vidalar">
+  </div>
+</section>
+<!-- BİTİŞ: Exploded View -->
 
 <div id="mats">
   <section class="mat pad r" data-m="Amfora Vazo|#d2a94f"><div class="txt rv"><div class="nm">Pirinç · El dövmesi</div><h2>Amfora<br>Vazo</h2><p>Tek parça levhadan dövülerek şekillendirilir. Yüzeydeki her çekiç izi elle atılmıştır; ışık altında yüzlerce küçük yansımaya bölünür.</p><ul><li>Yükseklik<span>38 cm</span></li><li>Malzeme<span>Pirinç, mum kaplı</span></li><li>Üretim süresi<span>Yaklaşık 36 saat</span></li></ul><a href="https://www.shopier.com/" target="_blank" rel="noopener">Shopier'da gör ↗</a></div></section>
@@ -153,11 +192,15 @@ details p{margin-top:.8rem;max-width:40rem}
 <section class="cta pad" id="shop">
   <h2 class="rv">Sizin için hangisi?</h2>
   <p class="rv">Güncel objeler Shopier mağazamızda. Güvenli ödeme, sigortalı teslimat.</p>
-  <a class="btn rv" href="https://www.shopier.com/" target="_blank" rel="noopener">Shopier'da incele <span>↗</span></a>
+  <a class="btn rv" href="https://www.shopier.com/MGARTOFMETALS" target="_blank" rel="noopener">Shopier'da incele <span>↗</span></a>
   <div class="foot rv">@koratolye · atolye@koratolye.com · İstanbul · © 2026 Kor Atölye</div>
 </section>
 
+<!-- Kütüphaneler (Three.js + GSAP + ScrollTrigger) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
 <script>
 (function(){
   function cl(v){return Math.max(0,Math.min(1,v))}
@@ -224,6 +267,26 @@ details p{margin-top:.8rem;max-width:40rem}
       if(op>.01)r.render(sc,cam)}
     requestAnimationFrame(loop)}
   loop();
+
+  // YENİ EKLENEN: GSAP Animasyon Motoru İşlemleri
+  gsap.registerPlugin(ScrollTrigger);
+  const tl = gsap.timeline({
+    scrollTrigger: {
+      trigger: ".exploded-showcase", 
+      start: "top top", 
+      end: "+=100%", // 1 tam ekran aşağı kaydırılana kadar sürer
+      scrub: 1,      // Animasyon scroll hızına göre yumuşak çalışır
+      pin: true      // Animasyon süresince ekranı kilitler
+    }
+  });
+
+  // Parçaların başlangıç (dağınık) konumları
+  tl.from("#part-base", { y: 300, opacity: 0, duration: 1 }, 0);
+  tl.from("#part-body", { x: 300, y: -100, opacity: 0, duration: 1 }, 0);
+  tl.from("#part-chain", { y: -400, x: -200, rotation: -45, opacity: 0, duration: 1 }, 0);
+  tl.from("#part-bulb", { y: 200, opacity: 0, duration: 1 }, 0.2); // Ampul biraz daha gecikmeli gelir
+  tl.from("#part-screws", { scale: 3, opacity: 0, duration: 1 }, 0.3); // Vidalar en son ufalarak yerine oturur
+
 })();
 </script>
 </body>
